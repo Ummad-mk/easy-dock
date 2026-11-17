@@ -33,9 +33,9 @@ public partial class DockWindow : Window
     private double _dockY;      // 15% from top
     private const double DockWidth = 62; // Reduced to 0.7 of previous width (62px)
 
-    // Auto-hide setting: default to false (Always Visible) so it never disappears on its own
-    private bool _isAutoHide    = false;
-    private bool _isDockVisible = true;
+    // Auto-hide setting: true by default
+    private bool _isAutoHide    = true;
+    private bool _isDockVisible = false;
 
     private readonly ObservableCollection<DockAppItem> _pinned  = new();
     private readonly ObservableCollection<DockAppItem> _running = new();
@@ -59,7 +59,7 @@ public partial class DockWindow : Window
         _windowPoller.Tick += (_, _) => RefreshRunningApps();
 
         // Delay timer before hiding when Auto-Hide is enabled
-        _hideTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1200) };
+        _hideTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(700) };
         _hideTimer.Tick += (_, _) =>
         {
             _hideTimer.Stop();
@@ -69,8 +69,8 @@ public partial class DockWindow : Window
             }
         };
 
-        // Physical cursor tracker to ensure edge triggering is 100% reliable even with DPI scaling
-        _cursorTracker = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(40) };
+        // Physical cursor tracker to ensure edge triggering is 100% reliable across DPI scaling
+        _cursorTracker = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(35) };
         _cursorTracker.Tick += CursorTracker_Tick;
 
         MouseEnter += (_, _) =>
@@ -112,9 +112,11 @@ public partial class DockWindow : Window
         _windowPoller.Start();
         _cursorTracker.Start();
 
-        // Start fully visible and STAY visible!
-        Left = _screenW - DockWidth - 6;
-        _isDockVisible = true;
+        // Start Auto-Hidden on the right edge by default!
+        Left = _screenW - 14;
+        _isDockVisible = false;
+        CollapsedIndicator.Visibility = Visibility.Visible;
+        DockContentPanel.Opacity      = 0.0;
         UpdatePinButtonVisual();
     }
 
@@ -125,13 +127,12 @@ public partial class DockWindow : Window
 
         if (NativeMethods.GetCursorPos(out var pt))
         {
-            // Calculate screen pixel bounds (handles DPI scaling)
-            double screenPixelW = System.Windows.Forms.Screen.PrimaryScreen?.Bounds.Width ?? _screenW;
-            double dpiFactor = screenPixelW / _screenW;
-            double cursorX = pt.X / dpiFactor;
-            double cursorY = pt.Y / dpiFactor;
+            // Exact per-monitor DPI scale factor (1.25 on 120 DPI, 1.0 on 96 DPI)
+            var dpi = VisualTreeHelper.GetDpi(this);
+            double cursorX = pt.X / (dpi.DpiScaleX > 0 ? dpi.DpiScaleX : 1.0);
+            double cursorY = pt.Y / (dpi.DpiScaleY > 0 ? dpi.DpiScaleY : 1.0);
 
-            bool inVerticalDockZone = cursorY >= _dockY && cursorY <= (_dockY + _dockH);
+            bool inVerticalDockZone = cursorY >= (_dockY - 15) && cursorY <= (_dockY + _dockH + 15);
 
             // If mouse hits the right edge inside the 70% dock zone: expand immediately!
             if (!_isDockVisible && inVerticalDockZone && cursorX >= (_screenW - 14))
@@ -139,8 +140,8 @@ public partial class DockWindow : Window
                 _hideTimer.Stop();
                 SlideDock(show: true);
             }
-            // If dock is visible and mouse moved far to the left: auto-hide
-            else if (_isDockVisible && (cursorX < (_screenW - DockWidth - 40) || !inVerticalDockZone))
+            // If dock is visible and mouse moved left away from the dock: auto-hide
+            else if (_isDockVisible && (cursorX < (_screenW - DockWidth - 30) || !inVerticalDockZone))
             {
                 if (!_hideTimer.IsEnabled)
                 {
@@ -159,8 +160,8 @@ public partial class DockWindow : Window
     {
         if (show == _isDockVisible) return;
 
-        double shownLeft  = _screenW - DockWidth - 6;
-        double hiddenLeft = _screenW - 16; // 16px frosted handle remains visible on right screen edge
+        double shownLeft  = _screenW - DockWidth - 4;
+        double hiddenLeft = _screenW - 14; // 14px frosted handle remains visible on right screen edge
 
         _slideTarget   = show ? shownLeft : hiddenLeft;
         _isDockVisible = show;

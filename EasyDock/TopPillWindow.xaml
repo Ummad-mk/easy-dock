@@ -22,22 +22,22 @@
         </Border>
 
         <!-- ══════════════════════════════════════════════════════════ -->
-        <!-- 1. CLOSED STATE: Apple Dynamic Island Notch (From Image 1) -->
+        <!-- 1. CLOSED STATE: Apple Dynamic Island Notch (DEFAULT)     -->
         <!-- ══════════════════════════════════════════════════════════ -->
         <Border x:Name="ClosedPillHandle"
-                Width="74" Height="8"
+                Width="78" Height="9"
                 Background="{StaticResource AppleGlassBody}"
                 BorderBrush="{StaticResource AppleLightCatchingBorder}"
                 BorderThickness="1"
-                CornerRadius="4"
+                CornerRadius="4.5"
                 Cursor="Hand"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Top"
-                Visibility="Collapsed"
+                Visibility="Visible"
                 MouseLeftButtonDown="ClosedPillHandle_Click"
                 ToolTip="Click to open Status Bar">
             <Border.RenderTransform>
-                <ScaleTransform x:Name="notchScale" ScaleX="1.0" ScaleY="1.0" CenterX="37" CenterY="4"/>
+                <ScaleTransform x:Name="notchScale" ScaleX="1.0" ScaleY="1.0" CenterX="39" CenterY="0"/>
             </Border.RenderTransform>
 
             <!-- Subtle Inner Horizontal Bar Indicator (Physical Home Bar Metaphor) -->
@@ -46,6 +46,32 @@
                     CornerRadius="1"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"/>
+
+            <!-- Apple Dynamic Island Wobble on Hover (Squash & Stretch Spring Physics) -->
+            <Border.Triggers>
+                <EventTrigger RoutedEvent="MouseEnter">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="notchScale"
+                                                           Storyboard.TargetProperty="ScaleX">
+                                <SplineDoubleKeyFrame KeyTime="0:0:0.08" Value="1.15"/>
+                                <SplineDoubleKeyFrame KeyTime="0:0:0.18" Value="0.92"/>
+                                <SplineDoubleKeyFrame KeyTime="0:0:0.28" Value="1.06"/>
+                                <SplineDoubleKeyFrame KeyTime="0:0:0.38" Value="0.98"/>
+                                <SplineDoubleKeyFrame KeyTime="0:0:0.48" Value="1.00"/>
+                            </DoubleAnimationUsingKeyFrames>
+                            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="notchScale"
+                                                           Storyboard.TargetProperty="ScaleY">
+                                <SplineDoubleKeyFrame KeyTime="0:0:0.08" Value="0.84"/>
+                                <SplineDoubleKeyFrame KeyTime="0:0:0.18" Value="1.12"/>
+                                <SplineDoubleKeyFrame KeyTime="0:0:0.28" Value="0.94"/>
+                                <SplineDoubleKeyFrame KeyTime="0:0:0.38" Value="1.02"/>
+                                <SplineDoubleKeyFrame KeyTime="0:0:0.48" Value="1.00"/>
+                            </DoubleAnimationUsingKeyFrames>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </Border.Triggers>
         </Border>
 
         <!-- ══════════════════════════════════════════════════════════ -->
@@ -59,6 +85,7 @@
                 Padding="8,3"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Top"
+                Visibility="Collapsed"
                 Cursor="SizeAll">
 
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">

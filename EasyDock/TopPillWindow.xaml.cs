@@ -54,7 +54,8 @@ public partial class TopPillWindow : Window
     public void RepositionToTop()
     {
         double screenW = SystemParameters.PrimaryScreenWidth;
-        double w = ActualWidth > 0 ? ActualWidth : 380;
+        double defaultW = (ClosedPillHandle.Visibility == Visibility.Visible) ? 78 : 380;
+        double w = ActualWidth > 0 ? ActualWidth : defaultW;
         Left = (screenW - w) / 2;
         Top  = 0; // Flush against the top screen bezel (like Image 1 & 2)
     }
