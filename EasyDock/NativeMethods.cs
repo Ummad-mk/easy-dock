@@ -288,6 +288,39 @@ public static class NativeMethods
 
     private const uint WLAN_INTF_OPCODE_CURRENT_CONNECTION = 7;
 
+    // ─── DWM Thumbnail (Live Window Preview) ─────────────────────────────────
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DWM_THUMBNAIL_PROPERTIES
+    {
+        public int  dwFlags;
+        public RECT rcDestination;
+        public RECT rcSource;
+        public byte opacity;
+        [System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+        public bool fVisible;
+        [System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+        public bool fSourceClientAreaOnly;
+    }
+
+    public const int DWM_TNP_RECTDESTINATION      = 0x00000001;
+    public const int DWM_TNP_RECTSOURCE           = 0x00000002;
+    public const int DWM_TNP_OPACITY              = 0x00000004;
+    public const int DWM_TNP_VISIBLE              = 0x00000008;
+    public const int DWM_TNP_SOURCECLIENTAREAONLY = 0x00000010;
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmRegisterThumbnail(IntPtr hwndDestination, IntPtr hwndSource, out IntPtr phThumbnailId);
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmUnregisterThumbnail(IntPtr hThumbnailId);
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmUpdateThumbnailProperties(IntPtr hThumbnailId, ref DWM_THUMBNAIL_PROPERTIES ptnProperties);
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmQueryThumbnailSourceSize(IntPtr hThumbnail, out POINT pSize);
+
+    // ─── Wi-Fi Signal Quality ────────────────────────────────────────────────
     public static int GetWifiSignalQuality()
     {
         try

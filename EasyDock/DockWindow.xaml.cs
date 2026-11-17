@@ -5,7 +5,6 @@ using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -47,9 +46,9 @@ public partial class DockWindow : Window
     private DispatcherTimer? _slideTimer;
     private double _slideTarget;
 
-    // ─── Hover Mini Preview Popup ──────────────────────────────────────────
-    private System.Windows.Controls.Primitives.Popup? _hoverPopup;
-    private DispatcherTimer? _hoverHideTimer;
+    // ─── Hover Live Preview Window (DWM Thumbnail) ────────────────────────
+    private HoverPreviewWindow? _hoverPreview;
+    private DispatcherTimer?    _hoverHideTimer;
 
     public DockWindow()
     {
@@ -178,9 +177,9 @@ public partial class DockWindow : Window
         }
         else
         {
-            // Close any hover popup so it doesn't orphan when dock auto-hides
+            // Close any hover preview so it doesn't orphan when dock auto-hides
             _hoverHideTimer?.Stop();
-            if (_hoverPopup != null) _hoverPopup.IsOpen = false;
+            _hoverPreview?.HidePreview();
         }
 
         _slideTimer?.Stop();
@@ -378,93 +377,33 @@ public partial class DockWindow : Window
         });
     }
 
-    // ─── Hover Mini Preview Popup ────────────────────────────────────────────
+    // ─── Hover Live Preview Window (DWM Thumbnail) ───────────────────────────
     private void AppIcon_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
     {
         if (sender is not WpfButton btn || btn.Tag is not DockAppItem item) return;
 
-        // Cancel any pending hide
         _hoverHideTimer?.Stop();
 
-        // Build popup content: frosted card with icon + name
-        var iconImg = new System.Windows.Controls.Image
-        {
-            Source  = item.Icon,
-            Width   = 24,
-            Height  = 24,
-            Stretch = Stretch.Uniform
-        };
-        RenderOptions.SetBitmapScalingMode(iconImg, BitmapScalingMode.HighQuality);
+        // Lazily create the preview window (single instance reused across all icons)
+        _hoverPreview ??= new HoverPreviewWindow();
 
-        var nameText = new TextBlock
-        {
-            Text              = item.Name,
-            Foreground        = new SolidColorBrush(Colors.White),
-            FontFamily        = new System.Windows.Media.FontFamily("Segoe UI Variable Display, Segoe UI"),
-            FontSize          = 11.5,
-            FontWeight        = FontWeights.SemiBold,
-            VerticalAlignment = VerticalAlignment.Center,
-            Margin            = new Thickness(item.Icon != null ? 6 : 0, 0, 0, 0)
-        };
-
-        var row = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        if (item.Icon != null) row.Children.Add(iconImg);
-        row.Children.Add(nameText);
-
-        var card = new Border
-        {
-            Background      = new SolidColorBrush(MediaColor.FromArgb(0xF0, 0x0D, 0x11, 0x17)),
-            BorderBrush     = new SolidColorBrush(MediaColor.FromArgb(0x50, 0xFF, 0xFF, 0xFF)),
-            BorderThickness = new Thickness(1),
-            CornerRadius    = new CornerRadius(7),
-            Padding         = new Thickness(10, 6, 10, 6),
-            Effect          = new System.Windows.Media.Effects.DropShadowEffect
-            {
-                BlurRadius  = 12,
-                ShadowDepth = 0,
-                Opacity     = 0.5,
-                Color       = Colors.Black
-            },
-            Child = row
-        };
-
-        // Position popup to the left of the dock button, vertically centred on button
+        // Compute button vertical center in screen DIPs
         var dpi        = VisualTreeHelper.GetDpi(this);
         var screenPos  = btn.PointToScreen(new System.Windows.Point(0, 0));
-        double btnScreenX = screenPos.X / (dpi.DpiScaleX > 0 ? dpi.DpiScaleX : 1.0);
-        double btnScreenY = screenPos.Y / (dpi.DpiScaleY > 0 ? dpi.DpiScaleY : 1.0);
-        double btnH       = btn.ActualHeight;
+        double btnCenterY = screenPos.Y / dpi.DpiScaleY + btn.ActualHeight / 2.0;
 
-        if (_hoverPopup == null)
-        {
-            _hoverPopup = new System.Windows.Controls.Primitives.Popup
-            {
-                Placement          = System.Windows.Controls.Primitives.PlacementMode.AbsolutePoint,
-                AllowsTransparency = true,
-                IsOpen             = false,
-                StaysOpen          = true
-            };
-        }
-
-        _hoverPopup.Child = card;
-
-        // Estimate card width; position to the left of the dock with a small gap
-        double estimatedW = Math.Max(80, item.Name.Length * 7.5 + (item.Icon != null ? 36 : 0) + 20);
-        _hoverPopup.HorizontalOffset = btnScreenX - estimatedW - 6;
-        _hoverPopup.VerticalOffset   = btnScreenY + (btnH / 2) - 16;
-        _hoverPopup.IsOpen = true;
+        _hoverPreview.ShowForApp(item, Left, btnCenterY);
     }
 
     private void AppIcon_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
     {
-        // Short delay so the popup doesn't flicker if mouse briefly leaves the button
+        // Short delay so the preview doesn't flicker when the mouse briefly leaves
         _hoverHideTimer?.Stop();
-        _hoverHideTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(120) };
+        _hoverHideTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
         _hoverHideTimer.Tick += (_, _) =>
         {
             _hoverHideTimer!.Stop();
-            if (_hoverPopup != null)
-                _hoverPopup.IsOpen = false;
+            _hoverPreview?.HidePreview();
         };
         _hoverHideTimer.Start();
     }
