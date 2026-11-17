@@ -12,11 +12,11 @@
         WindowStartupLocation="Manual">
 
     <Grid Margin="12,0,12,12">
-        <!-- Apple Ambient Deep Drop Shadow (Thick Floating Material Layer) -->
-        <Border CornerRadius="18">
+        <!-- Ambient Deep Drop Shadow Layer -->
+        <Border CornerRadius="7">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="26" ShadowDepth="4"
-                                  Direction="270" Opacity="0.55"
+                <DropShadowEffect BlurRadius="16" ShadowDepth="2"
+                                  Direction="270" Opacity="0.45"
                                   Color="#000000"/>
             </Border.Effect>
         </Border>
@@ -47,7 +47,7 @@
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"/>
 
-            <!-- Apple Dynamic Island Wobble on Hover (Squash & Stretch Spring Physics) -->
+            <!-- Dynamic Notch Wobble on Hover (Squash & Stretch Spring Physics) -->
             <Border.Triggers>
                 <EventTrigger RoutedEvent="MouseEnter">
                     <BeginStoryboard>
@@ -75,13 +75,13 @@
         </Border>
 
         <!-- ══════════════════════════════════════════════════════════ -->
-        <!-- 2. OPENED STATE: Apple Status Pill (From Image 2)          -->
+        <!-- 2. OPENED STATE: Status Bar Pill (7px Border Radius)      -->
         <!-- ══════════════════════════════════════════════════════════ -->
         <Border x:Name="OpenedPillBar"
                 Background="{StaticResource AppleGlassBody}"
                 BorderBrush="{StaticResource AppleLightCatchingBorder}"
                 BorderThickness="1"
-                CornerRadius="17"
+                CornerRadius="7"
                 Padding="8,3"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Top"

@@ -20,7 +20,7 @@
 
         <!-- Active Running Indicator Glow (Pearl White) -->
         <DropShadowEffect x:Key="ActiveIndicatorGlow"
-                          BlurRadius="6" ShadowDepth="0"
+                          BlurRadius="3" ShadowDepth="0"
                           Opacity="0.85" Color="#FFFFFF"/>
 
         <!-- ════════════════════════════════════════════════════════════════════ -->
@@ -45,7 +45,7 @@
                                     Background="Transparent"
                                     BorderBrush="Transparent"
                                     BorderThickness="1"
-                                    CornerRadius="8"
+                                    CornerRadius="6"
                                     Padding="{TemplateBinding Padding}">
                                 <ContentPresenter HorizontalAlignment="Center"
                                                   VerticalAlignment="Center"/>
@@ -156,7 +156,7 @@
                             <!-- Apple Glass Chip Layer -->
                             <Border x:Name="bg"
                                     Background="#14FFFFFF"
-                                    CornerRadius="10"
+                                    CornerRadius="7"
                                     BorderBrush="#24FFFFFF"
                                     BorderThickness="1">
                                 <ContentPresenter HorizontalAlignment="Center"
@@ -165,7 +165,7 @@
                         </Grid>
 
                         <ControlTemplate.Triggers>
-                            <!-- Hover: Fluid Scale Up (Damping 0.9, Response 0.18s) -->
+                            <!-- Hover: Fluid Scale Up (Damping 0.9, Response 0.14s) -->
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bg" Property="Background"  Value="#2BFFFFFF"/>
                                 <Setter TargetName="bg" Property="BorderBrush" Value="#55FFFFFF"/>
@@ -174,16 +174,16 @@
                                         <Storyboard>
                                             <DoubleAnimation Storyboard.TargetName="iconScale"
                                                              Storyboard.TargetProperty="ScaleX"
-                                                             To="1.16" Duration="0:0:0.14">
+                                                             To="1.08" Duration="0:0:0.12">
                                                 <DoubleAnimation.EasingFunction>
-                                                    <BackEase Amplitude="0.25" EasingMode="EaseOut"/>
+                                                    <CubicEase EasingMode="EaseOut"/>
                                                 </DoubleAnimation.EasingFunction>
                                             </DoubleAnimation>
                                             <DoubleAnimation Storyboard.TargetName="iconScale"
                                                              Storyboard.TargetProperty="ScaleY"
-                                                             To="1.16" Duration="0:0:0.14">
+                                                             To="1.08" Duration="0:0:0.12">
                                                 <DoubleAnimation.EasingFunction>
-                                                    <BackEase Amplitude="0.25" EasingMode="EaseOut"/>
+                                                    <CubicEase EasingMode="EaseOut"/>
                                                 </DoubleAnimation.EasingFunction>
                                             </DoubleAnimation>
                                         </Storyboard>
@@ -194,14 +194,14 @@
                                         <Storyboard>
                                             <DoubleAnimation Storyboard.TargetName="iconScale"
                                                              Storyboard.TargetProperty="ScaleX"
-                                                             To="1.0" Duration="0:0:0.18">
+                                                             To="1.0" Duration="0:0:0.14">
                                                 <DoubleAnimation.EasingFunction>
                                                     <CubicEase EasingMode="EaseOut"/>
                                                 </DoubleAnimation.EasingFunction>
                                             </DoubleAnimation>
                                             <DoubleAnimation Storyboard.TargetName="iconScale"
                                                              Storyboard.TargetProperty="ScaleY"
-                                                             To="1.0" Duration="0:0:0.18">
+                                                             To="1.0" Duration="0:0:0.14">
                                                 <DoubleAnimation.EasingFunction>
                                                     <CubicEase EasingMode="EaseOut"/>
                                                 </DoubleAnimation.EasingFunction>
@@ -219,10 +219,10 @@
                                         <Storyboard>
                                             <DoubleAnimation Storyboard.TargetName="iconScale"
                                                              Storyboard.TargetProperty="ScaleX"
-                                                             To="0.92" Duration="0:0:0.06"/>
+                                                             To="0.94" Duration="0:0:0.06"/>
                                             <DoubleAnimation Storyboard.TargetName="iconScale"
                                                              Storyboard.TargetProperty="ScaleY"
-                                                             To="0.92" Duration="0:0:0.06"/>
+                                                             To="0.94" Duration="0:0:0.06"/>
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </Trigger.EnterActions>
