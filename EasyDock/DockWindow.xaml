@@ -44,7 +44,9 @@
                         Tag="{Binding}"
                         Click="AppIcon_Click"
                         MouseRightButtonDown="AppIcon_RightClick"
-                        ToolTip="{Binding Name}">
+                        MouseEnter="AppIcon_MouseEnter"
+                        MouseLeave="AppIcon_MouseLeave"
+                        ToolTip="{x:Null}">
                     <Grid Width="28" Height="28">
                         <!-- High-Res Native Icon -->
                         <Image Source="{Binding Icon}"

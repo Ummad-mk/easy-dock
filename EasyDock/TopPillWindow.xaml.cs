@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -11,6 +12,8 @@ public partial class TopPillWindow : Window
     private readonly DispatcherTimer _clockTimer;
     private readonly DispatcherTimer _batteryTimer;
 
+    // Popup for battery info (anchored near the clicked button)
+    private System.Windows.Controls.Primitives.Popup? _batteryPopup;
     public TopPillWindow()
     {
         InitializeComponent();
@@ -86,6 +89,7 @@ public partial class TopPillWindow : Window
                 }
                 else
                 {
+                    // No battery / AC only
                     BatteryFill.Width = 15;
                     BatteryBolt.Visibility = Visibility.Visible;
                 }
@@ -136,11 +140,115 @@ public partial class TopPillWindow : Window
 
     private void Battery_Click(object sender, RoutedEventArgs e)
     {
+        if (sender is not System.Windows.Controls.Button btn) return;
+
+        // Toggle: close popup if already open
+        if (_batteryPopup?.IsOpen == true)
+        {
+            _batteryPopup.IsOpen = false;
+            return;
+        }
+
+        // Read current battery status
+        string statusLine;
         try
         {
-            Process.Start(new ProcessStartInfo("ms-settings:powersleep") { UseShellExecute = true });
+            if (NativeMethods.GetSystemPowerStatus(out var pwr))
+            {
+                if (pwr.BatteryLifePercent <= 100)
+                {
+                    bool charging = (pwr.BatteryFlag & 0x08) != 0;
+                    string chargeStr = charging ? " ⚡ Charging" : "";
+                    statusLine = $"{pwr.BatteryLifePercent}%{chargeStr}";
+                }
+                else
+                {
+                    statusLine = "AC Power (no battery)";
+                }
+            }
+            else
+            {
+                statusLine = "Unavailable";
+            }
         }
-        catch { }
+        catch
+        {
+            statusLine = "Unavailable";
+        }
+
+        // Build the popup card
+        var text = new TextBlock
+        {
+            Text              = $"🔋  {statusLine}",
+            Foreground        = new SolidColorBrush(Colors.White),
+            FontFamily        = new System.Windows.Media.FontFamily("Segoe UI Variable Display, Segoe UI"),
+            FontSize          = 12,
+            FontWeight        = FontWeights.SemiBold,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        var settingsLink = new System.Windows.Controls.Button
+        {
+            Content             = "Battery Settings…",
+            Foreground          = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x0A, 0x84, 0xFF)),
+            Background          = System.Windows.Media.Brushes.Transparent,
+            BorderBrush         = System.Windows.Media.Brushes.Transparent,
+            FontFamily          = new System.Windows.Media.FontFamily("Segoe UI Variable Display, Segoe UI"),
+            FontSize            = 11,
+            Cursor              = System.Windows.Input.Cursors.Hand,
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
+            Margin              = new Thickness(0, 4, 0, 0)
+        };
+        settingsLink.Click += (_, _) =>
+        {
+            _batteryPopup!.IsOpen = false;
+            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("ms-settings:powersleep") { UseShellExecute = true }); } catch { }
+        };
+
+        var stack = new StackPanel { Margin = new Thickness(0) };
+        stack.Children.Add(text);
+        stack.Children.Add(settingsLink);
+
+        var card = new System.Windows.Controls.Border
+        {
+            Background      = new SolidColorBrush(System.Windows.Media.Color.FromArgb(0xF4, 0x0D, 0x11, 0x17)),
+            BorderBrush     = new SolidColorBrush(System.Windows.Media.Color.FromArgb(0x50, 0xFF, 0xFF, 0xFF)),
+            BorderThickness = new Thickness(1),
+            CornerRadius    = new System.Windows.CornerRadius(8),
+            Padding         = new Thickness(14, 10, 14, 10),
+            Effect          = new System.Windows.Media.Effects.DropShadowEffect
+            {
+                BlurRadius  = 14,
+                ShadowDepth = 0,
+                Opacity     = 0.55,
+                Color       = Colors.Black
+            },
+            Child = stack
+        };
+
+        // Compute screen position of the battery button: show popup below it
+        var dpi       = VisualTreeHelper.GetDpi(this);
+        var screenPos = btn.PointToScreen(new System.Windows.Point(0, 0));
+        double bx = screenPos.X / (dpi.DpiScaleX > 0 ? dpi.DpiScaleX : 1.0);
+        double by = screenPos.Y / (dpi.DpiScaleY > 0 ? dpi.DpiScaleY : 1.0);
+        double bh = btn.ActualHeight;
+        double bw = btn.ActualWidth;
+
+        if (_batteryPopup == null)
+        {
+            _batteryPopup = new System.Windows.Controls.Primitives.Popup
+            {
+                Placement          = System.Windows.Controls.Primitives.PlacementMode.AbsolutePoint,
+                AllowsTransparency = true,
+                StaysOpen          = false,   // closes on click outside
+                IsOpen             = false
+            };
+        }
+
+        _batteryPopup.Child            = card;
+        _batteryPopup.HorizontalOffset = bx + bw / 2 - 90; // roughly center popup under button
+        _batteryPopup.VerticalOffset   = by + bh + 6;
+        _batteryPopup.IsOpen           = true;
     }
 
     private void Clock_Click(object sender, RoutedEventArgs e)
