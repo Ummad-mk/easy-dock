@@ -176,6 +176,12 @@ public partial class DockWindow : Window
             CollapsedIndicator.Visibility = Visibility.Collapsed;
             DockContentPanel.Opacity      = 1.0;
         }
+        else
+        {
+            // Close any hover popup so it doesn't orphan when dock auto-hides
+            _hoverHideTimer?.Stop();
+            if (_hoverPopup != null) _hoverPopup.IsOpen = false;
+        }
 
         _slideTimer?.Stop();
         _slideTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(15) };
