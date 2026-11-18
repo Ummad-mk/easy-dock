@@ -288,6 +288,82 @@ public static class NativeMethods
 
     private const uint WLAN_INTF_OPCODE_CURRENT_CONNECTION = 7;
 
+    // ─── Acrylic / Blur-Behind (SetWindowCompositionAttribute) ──────────────
+    private enum AccentState
+    {
+        ACCENT_DISABLED                  = 0,
+        ACCENT_ENABLE_GRADIENT           = 1,
+        ACCENT_ENABLE_TRANSPARENTGRADIENT = 2,
+        ACCENT_ENABLE_BLURBEHIND         = 3,
+        ACCENT_ENABLE_ACRYLICBLURBEHIND  = 4,  // Windows 10 1803+ / Windows 11
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct AccentPolicy
+    {
+        public AccentState AccentState;
+        public int         AccentFlags;
+        public int         GradientColor;  // AARGBGRR (little-endian ARGB in int)
+        public int         AnimationId;
+    }
+
+    private enum WindowCompositionAttribute { WCA_ACCENT_POLICY = 19 }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct WindowCompositionAttributeData
+    {
+        public WindowCompositionAttribute Attribute;
+        public IntPtr                     Data;
+        public int                        SizeOfData;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern int SetWindowCompositionAttribute(IntPtr hwnd,
+                                                            ref WindowCompositionAttributeData data);
+
+    /// <summary>
+    /// Apply Windows 10/11 acrylic blur-behind to any WPF window.
+    /// tintColorAARRGGBB: Alpha in high byte, then R, G, B.
+    /// E.g. 0x990D1117 = 60% opacity dark blue-black tint.
+    /// </summary>
+    public static void EnableAcrylic(Window window, uint tintColorAARRGGBB = 0x990D1117u)
+    {
+        try
+        {
+            var hwnd = new WindowInteropHelper(window).Handle;
+            if (hwnd == IntPtr.Zero) return;
+
+            // Convert 0xAARRGGBB → AccentPolicy int (stored as 0xAABBGGRR in memory on LE)
+            byte a = (byte)((tintColorAARRGGBB >> 24) & 0xFF);
+            byte r = (byte)((tintColorAARRGGBB >> 16) & 0xFF);
+            byte g = (byte)((tintColorAARRGGBB >>  8) & 0xFF);
+            byte b = (byte)( tintColorAARRGGBB        & 0xFF);
+            int gradientColor = (a << 24) | (b << 16) | (g << 8) | r;
+
+            var accent = new AccentPolicy
+            {
+                AccentState   = AccentState.ACCENT_ENABLE_ACRYLICBLURBEHIND,
+                AccentFlags   = 2,
+                GradientColor = gradientColor,
+                AnimationId   = 0
+            };
+
+            int sz     = Marshal.SizeOf(accent);
+            IntPtr ptr = Marshal.AllocHGlobal(sz);
+            Marshal.StructureToPtr(accent, ptr, false);
+
+            var data = new WindowCompositionAttributeData
+            {
+                Attribute  = WindowCompositionAttribute.WCA_ACCENT_POLICY,
+                Data       = ptr,
+                SizeOfData = sz
+            };
+            SetWindowCompositionAttribute(hwnd, ref data);
+            Marshal.FreeHGlobal(ptr);
+        }
+        catch { }
+    }
+
     // ─── DWM Thumbnail (Live Window Preview) ─────────────────────────────────
     [StructLayout(LayoutKind.Sequential)]
     public struct DWM_THUMBNAIL_PROPERTIES

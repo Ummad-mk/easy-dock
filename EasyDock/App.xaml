@@ -8,14 +8,14 @@
         <!-- APPLE DESIGN FOUNDATIONS: Translucent Materials & Depth              -->
         <!-- ════════════════════════════════════════════════════════════════════ -->
 
-        <!-- Apple Glass Body: Deep translucent obsidian with vibrancy -->
-        <SolidColorBrush x:Key="AppleGlassBody" Color="#E60D1117"/>
+        <!-- Apple Glass Body: Translucent — acrylic fills in the rest -->
+        <SolidColorBrush x:Key="AppleGlassBody" Color="#180D1117"/>
 
         <!-- Light-Catching Edge: Bright top rim reflecting ambient light -->
         <LinearGradientBrush x:Key="AppleLightCatchingBorder" StartPoint="0.5,0" EndPoint="0.5,1">
-            <GradientStop Color="#59FFFFFF" Offset="0.0"/>
-            <GradientStop Color="#28FFFFFF" Offset="0.5"/>
-            <GradientStop Color="#14FFFFFF" Offset="1.0"/>
+            <GradientStop Color="#45FFFFFF" Offset="0.0"/>
+            <GradientStop Color="#18FFFFFF" Offset="0.5"/>
+            <GradientStop Color="#08FFFFFF" Offset="1.0"/>
         </LinearGradientBrush>
 
         <!-- Active Running Indicator Glow (Pearl White) -->
